@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"poetry"
+	"strconv"
 )
 
 /*
@@ -16,24 +17,23 @@ returns the number of bytes written and any write error encountered.
 */
 
 type poemWithTitle struct {
-	Title string
-	Body  poetry.Poem
-
+	Title     string
+	Body      poetry.Poem
+	WordCount string
+	TheCount  int
 }
 
-
 type config struct {
-	Route string
-	BindAddress string `json:"addr"`
-	ValidPoems []string `json:"valid"`
+	Route       string
+	BindAddress string   `json:"addr"`
+	ValidPoems  []string `json:"valid"`
 	//{"doggie.txt","cat.txt","letterA.txt"}
 
 }
 
 var c config
 
-
-func poemHandler(w http.ResponseWriter, r *http.Request)  {
+func poemHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	poemName := r.Form["name"][0]
 	//fileName := "doggie.txt"
@@ -54,14 +54,24 @@ func poemHandler(w http.ResponseWriter, r *http.Request)  {
 			}
 		}
 
-
 		if valid {
-			pwt := poemWithTitle{poemName, p}
-			enc := json.NewEncoder(w)
-			//enc := json.NewEncoder(w)
-			//enc.Encode(p)
-			enc.Encode(pwt)
+			//sort.Sort(p[0])
+			/*			p.SortPoem()
+						pwt := poemWithTitle{poemName, p,
+										strconv.FormatInt(int64(p.NumWords()),10),
+										p.NumThe()}
+						enc := json.NewEncoder(w)
+						//enc := json.NewEncoder(w)
+						//enc.Encode(p)
+						enc.Encode(pwt)*/
 
+			p.ShufflePoem()
+			pwt2 := poemWithTitle{poemName, p,
+				strconv.FormatInt(int64(p.NumWords()), 10),
+				p.NumThe()}
+			enc2 := json.NewEncoder(w)
+
+			enc2.Encode(pwt2)
 
 			if err != nil {
 				fmt.Printf("An Error occured reading file %s \n", poemName)
@@ -74,11 +84,7 @@ func poemHandler(w http.ResponseWriter, r *http.Request)  {
 		// _, err = fmt.Fprintf(w, "Poem Name: %s \n\n%s\n\n",poemName, p)
 	}
 
-
-
-
 }
-
 
 func main() {
 
@@ -87,7 +93,6 @@ func main() {
 		os.Exit(-1)
 	}
 	defer f.Close()
-
 
 	dec := json.NewDecoder(f)
 
@@ -105,18 +110,23 @@ func main() {
 	}
 
 	fmt.Printf("%s\n", p)
-*/
+	*/
 
-/*	http.HandleFunc("/poem", poemHandler )
-	http.ListenAndServe(":8088", nil)
-*/
+	/*	http.HandleFunc("/poem", poemHandler )
+		http.ListenAndServe(":8088", nil)
+	*/
 
-    fmt.Printf("%v\n\n", c)
+	fmt.Printf("%v\n\n", c)
 
-	http.HandleFunc(c.Route, poemHandler )
+	http.HandleFunc(c.Route, poemHandler)
 	http.ListenAndServe(c.BindAddress, nil)
 
 }
+
+/*
+Anthonys-MacBook-Pro:go mcclayac$ curl http://127.0.0.1:8088/get\?name=doggie.txt | json_pp
+
+*/
 
 /*
 type Values map[string][]string
